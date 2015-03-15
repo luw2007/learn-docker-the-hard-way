@@ -55,3 +55,6 @@ target/
 
 # pycharm
 .idea/
+
+#mkdocs build
+site/
