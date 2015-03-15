@@ -15,9 +15,8 @@ learn docker the hard way
 对照版采用`tag``v1.0.0`
 
 ##如何使用
-本书可以使用`markdown`语法。
-采用[mkdocs](http://www.mkdocs.org/)生成html 版本阅读体验较佳。
-也可以在`马克飞象`等[markdown](http://zh.wikipedia.org/zh-cn/Markdown)阅读其中中查看。
+本书可以使用`markdown`语法。可以在`马克飞象`中查看。
+可以下载[mkdocs](http://www.mkdocs.org/)驱动。
 
 ##备注
 代码中的原有注释沿用'//'一般为英文注释。
