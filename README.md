@@ -1,6 +1,7 @@
 learn docker the hard way
 =========================
-
+**Project documentation with Markdown.**
+[![Docs Status][readthedocs-image]][readthedocs-link]
 ##关于
 从老版本读docker, 深入了解基础实现。
 为什么从老版本开始。 因为代码少，基本都是核心内容。使用以下脚本
@@ -30,3 +31,6 @@ learn docker the hard way
 ##版权
 暂为(luw2007)个人所有，转载请保留版权声明。
 如果有其他参与者考虑使用开发版权, 如 Creative Commons licenses。
+
+[readthedocs-image]: https://readthedocs.org/projects/learn-docker-the-hard-way/badge/?version=latest
+[readthedocs-link]: http://learn-docker-the-hard-way.readthedocs.org
