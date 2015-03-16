@@ -1,10 +1,9 @@
-runtime.go
-==================
 `docker`后台服务的主要实现在`runtime.go`中。因此梳理玩`docker`启动逻辑之后，我们来看看`runtime`的实现。
 
 `runtime`中主要包含`runtime`和`history`的实现。
 
-#初始化
+初始化
+==================
 ``` golang
 // 存储系统初始化路径
 var sysInitPath string
@@ -14,7 +13,8 @@ func init() {
 	sysInitPath = SelfPath()
 ```
 
-#runtime
+runtime
+==================
 ##runtime的构造
 ``` goalng
 type Runtime struct {
@@ -234,7 +234,8 @@ func (runtime *Runtime) restore() error {
 }
 ```
 
-#history
+history
+==================
 ##history的构造
 
 ``` golang

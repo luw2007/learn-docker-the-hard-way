@@ -1,5 +1,4 @@
-docker.go
-==================
+####__author__ = 'luw2007@gmail.com'
 `docker.go` 打包成`docker`命令行工具， 也就是我们最常接触到的`docker`命令。
 里面有三个方法 `main`, `daemon`, `runCommand`。
 	
@@ -9,7 +8,8 @@ docker.go
 上一句注释为源代码注释， 下面的注释为后加的解释。 
 为了排版简介， 部分有中文注释简单的原文注释被删除了。 
 
-##docker.go:main
+docker.go:main
+==================
 ``` golang 
 
 func main() {	
@@ -42,7 +42,7 @@ func main() {
 }
 ```
 
-###sysinit.go:SysInit
+##sysinit.go:SysInit
 ``` golang
 func SysInit() {
 	//# 需要参数
@@ -68,7 +68,8 @@ func SysInit() {
 }
 ```
 
-##docker.go:daemon
+docker.go:daemon
+==================
 ``` golang 
 func daemon() error {
 	//# 启动服务
@@ -80,7 +81,8 @@ func daemon() error {
 	return rcli.ListenAndServe("tcp", "127.0.0.1:4242", service)
 }
 ```
-###commands.go:NewServer
+
+##commands.go:NewServer
 ```golang 
 func NewServer() (*Server, error) {
 	rand.Seed(time.Now().UTC().UnixNano())
@@ -104,7 +106,7 @@ type Server struct {
 }
 ```
 
-###runtime.go:NewRuntime
+##runtime.go:NewRuntime
 ``` golang
 func NewRuntime() (*Runtime, error) {
 	return NewRuntimeFromDirectory("/var/lib/docker")
@@ -171,7 +173,8 @@ func (runtime *Runtime) restore() error {
 	return nil
 }
 ```
-###graph.go:NewGraph
+
+##graph.go:NewGraph
 ``` golang
 type Graph struct {
 	Root string
@@ -192,7 +195,7 @@ func NewGraph(root string) (*Graph, error) {
 }
 ```
 
-###tags.go:NewTagStore
+##tags.go:NewTagStore
 ``` golang
 const DEFAULT_TAG = "latest"
 
@@ -226,7 +229,8 @@ func NewTagStore(path string, graph *Graph) (*TagStore, error) {
 }
 
 ```
-###network.go:newNetworkManager
+
+##network.go:newNetworkManager
 ``` golang
 func newNetworkManager(bridgeIface string) (*NetworkManager, error) {
 	addr, err := getIfaceAddr(bridgeIface)
@@ -257,7 +261,8 @@ func newNetworkManager(bridgeIface string) (*NetworkManager, error) {
 	return manager, nil
 }
 ```
-###auth.go:LoadConfig
+
+##auth.go:LoadConfig
 ```
 // load up the auth config information and return values
 // FIXME: use the internal golang config parser
@@ -283,7 +288,8 @@ func LoadConfig(rootPath string) (*AuthConfig, error) {
 }
 ```
 
-##docker.go:runCommand
+docker.go:runCommand
+==================
 ``` golang
 func runCommand(args []string) error {
 	var oldState *term.State
@@ -334,5 +340,3 @@ func runCommand(args []string) error {
 	return nil
 }
 ```
-
-####__author__ = 'luw2007@gmail.com'
