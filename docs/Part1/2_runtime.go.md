@@ -27,7 +27,7 @@ type Runtime struct {
 	networkManager *NetworkManager
 	//# 本地存储
 	graph          *Graph
-	//# `images·仓库
+	//# `images`仓库
 	repositories   *TagStore
 	//# 权限配置
 	authConfig     *auth.AuthConfig
@@ -72,7 +72,7 @@ func (runtime *Runtime) containerRoot(id string) string {
 	return path.Join(runtime.repository, id)
 }
 
-//# Create 
+//# Create 创建一个容器
 func (runtime *Runtime) Create(config *Config) (*Container, error) {
 	// 查找`Image`
 	img, err := runtime.repositories.LookupImage(config.Image)

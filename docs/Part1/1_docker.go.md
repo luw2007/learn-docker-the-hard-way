@@ -129,7 +129,7 @@ func NewRuntimeFromDirectory(root string) (*Runtime, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Couldn't create Tag store: %s", err)
 	}
-	//# 
+	//# 生成`NetworkManager`
 	netManager, err := newNetworkManager(networkBridgeIface)
 	if err != nil {
 		return nil, err

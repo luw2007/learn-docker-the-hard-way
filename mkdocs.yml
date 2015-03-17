@@ -10,3 +10,5 @@ pages:
 - [Part1/1_docker.go.md,      第一部分, docker.go]
 - [Part1/2_runtime.go.md,     第一部分, runtime.go]
 - [Part1/3_graph.go.md,       第一部分, graph.go]
+- [Part1/4_tags.go.md,        第一部分, tags.go]
+- [named.md, 对照表]
