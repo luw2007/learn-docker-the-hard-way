@@ -5,11 +5,11 @@
 
 |        英文        |      中文          |
 |:-----------------:|:-----------------:|
-|graph              | 本地存储 |
-|image              | 镜像 |
-|Container          | 容器 |
-|tag                | 标签 |
-|TagStore           | 标签仓库 |
-|Repository         | 仓库 |
-|NetworkManager     | 网络管理 |
+|graph              | 本地存储            |
+|image              | 镜像               |
+|Container          | 容器               |
+|tag                | 标签               |
+|TagStore           | 标签仓库            |
+|Repository         | 仓库               |
+|NetworkManager     | 网络管理            |
                           
