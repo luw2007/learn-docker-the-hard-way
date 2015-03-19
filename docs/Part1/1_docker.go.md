@@ -260,6 +260,34 @@ func newNetworkManager(bridgeIface string) (*NetworkManager, error) {
 	}
 	return manager, nil
 }
+
+func newIPAllocator(network *net.IPNet) (*IPAllocator, error) {
+	alloc := &IPAllocator{
+		network: network,
+	}
+	if err := alloc.populate(); err != nil {
+		return nil, err
+	}
+	return alloc, nil
+}
+
+func newPortAllocator(start, end int) (*PortAllocator, error) {
+	allocator := &PortAllocator{}
+	allocator.populate(start, end)
+	return allocator, nil
+}
+
+func newPortMapper() (*PortMapper, error) {
+	mapper := &PortMapper{}
+	if err := mapper.cleanup(); err != nil {
+		return nil, err
+	}
+	if err := mapper.setup(); err != nil {
+		return nil, err
+	}
+	return mapper, nil
+}
+
 ```
 
 ##auth.go:LoadConfig

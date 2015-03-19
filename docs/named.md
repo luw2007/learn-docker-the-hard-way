@@ -11,5 +11,7 @@
 |tag                | 标签               |
 |TagStore           | 标签仓库            |
 |Repository         | 仓库               |
-|NetworkManager     | 网络管理            |
+|NetworkManager     | 网络管理器          |
+|layer              | 层                |
+|PortMapper         | 端口映射器          |
                           
