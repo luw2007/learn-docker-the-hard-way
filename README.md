@@ -7,9 +7,9 @@ learn docker the hard way
 为什么从老版本开始。 因为代码少，基本都是核心内容。使用以下脚本
 
 	# 统计测试以外的golang 代码行数和单词数
-	find . -name "*.go" -exec wc {} \; |grep -v "_test" |sort -u |awk -F" " '{a+=$1;b+=$2}END{print $1, $2}'
-得到`v0.1.0`版本中golang代码**899 3400**，
-`v1.0.0`中则是**6877 51382**
+	find . -name "*.go" -exec wc {} \; |grep -v "_test" |sort -u |awk -F" " '{a+=$1;b+=$2}END{print a, b}'
+得到`v0.1.0`版本中golang代码**4499 15630**，
+`v1.0.0`中则是**101549 376671**
 
 ##阅读
 [在线阅读][readthedocs-link]  
