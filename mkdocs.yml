@@ -12,4 +12,5 @@ pages:
 - [Part1/3_graph.go.md,       第一部分, 3. 介绍graph.go]
 - [Part1/4_tags.go.md,        第一部分, 4. 介绍tags.go]
 - [Part1/5_network.go.md,     第一部分, 5. 介绍network.go]
+- [Part1/6_image.go.md,       第一部分, 6. 介绍image.go]
 - [named.md, 对照表]
