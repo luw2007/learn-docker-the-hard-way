@@ -14,4 +14,5 @@
 |NetworkManager     | 网络管理器          |
 |layer              | 层                |
 |PortMapper         | 端口映射器          |
+|History            | 历史               |
                           

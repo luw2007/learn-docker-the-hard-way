@@ -14,4 +14,5 @@ pages:
 - [Part1/5_network.go.md,     第一部分, 5. 介绍network.go]
 - [Part1/6_image.go.md,       第一部分, 6. 介绍image.go]
 - [Part1/7_container.go.md,   第一部分, 7. 介绍container.go]
+- [Part1/8_mount.go.md,       第一部分, 8. 介绍mount.go]
 - [named.md, 对照表]
