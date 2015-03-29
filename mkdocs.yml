@@ -13,4 +13,5 @@ pages:
 - [Part1/4_tags.go.md,        第一部分, 4. 介绍tags.go]
 - [Part1/5_network.go.md,     第一部分, 5. 介绍network.go]
 - [Part1/6_image.go.md,       第一部分, 6. 介绍image.go]
+- [Part1/7_container.go.md,   第一部分, 7. 介绍container.go]
 - [named.md, 对照表]
