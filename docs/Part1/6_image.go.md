@@ -4,10 +4,13 @@ Image的构造
 ``` golang
 type Image struct {
 	Id              string    `json:"id"`
+	//# 父镜像，该镜像基于某个父镜像创建。
 	Parent          string    `json:"parent,omitempty"`
 	Comment         string    `json:"comment,omitempty"`
 	Created         time.Time `json:"created"`
+	//# 容器名称
 	Container       string    `json:"container,omitempty"`
+	//# 容器配置
 	ContainerConfig Config    `json:"container_config,omitempty"`
 	//# Graph.Get 读取image 信息后，再把`graph`赋值给`image.graph`
 	graph           *Graph
@@ -17,7 +20,8 @@ type Image struct {
 Image的方法
 ==================
 ``` golang
-
+//# MountAUFS `docker`使用`AUFS`作为存储后端。 
+//# 扩展阅读 [Why use AUFS as the default Docker storage backend instead of devicemapper?](http://stackoverflow.com/questions/24764908)
 func MountAUFS(ro []string, rw string, target string) error {
 	// FIXME: Now mount the layers
 	rwBranch := fmt.Sprintf("%v=rw", rw)
@@ -40,7 +44,7 @@ func (image *Image) Mount(root, rw string) error {
 	if err != nil {
 		return err
 	}
-	// Create the target directories if they don't exist
+	// 如果目标目录不存在，就创建它们。
 	if err := os.Mkdir(root, 0755); err != nil && !os.IsExist(err) {
 		return err
 	}
@@ -59,16 +63,16 @@ func (image *Image) Mount(root, rw string) error {
 	if err != nil {
 		return err
 	}
-	// Iterate on changes
+	// 遍历变化
 	for _, c := range changes {
-		// If there is a delete
+		// 如果这里是删除状态
 		if c.Kind == ChangeDelete {
-			// Make sure the directory exists
+			// 确认目录已经存在
 			file_path, file_name := path.Dir(c.Path), path.Base(c.Path)
 			if err := os.MkdirAll(path.Join(rw, file_path), 0755); err != nil {
 				return err
 			}
-			// And create the whiteout (we just need to create empty file, discard the return)
+			// 创建空文件（我们只需创建空文件，并继续） 
 			if _, err := os.Create(path.Join(path.Join(rw, file_path),
 				".wh."+path.Base(file_name))); err != nil {
 				return err
@@ -78,6 +82,7 @@ func (image *Image) Mount(root, rw string) error {
 	return nil
 }
 
+//# Changes 返回镜像`images`的层`layers`
 func (image *Image) Changes(rw string) ([]Change, error) {
 	layers, err := image.layers()
 	if err != nil {
@@ -86,6 +91,7 @@ func (image *Image) Changes(rw string) ([]Change, error) {
 	return Changes(layers, rw)
 }
 
+//# ValidateId 验证镜像`id`是否正确
 func ValidateId(id string) error {
 	if id == "" {
 		return fmt.Errorf("Image id can't be empty")
@@ -96,6 +102,7 @@ func ValidateId(id string) error {
 	return nil
 }
 
+//# GenerateId 生成镜像id, 当前时间的纳秒作为随机种子。
 func GenerateId() string {
 	// FIXME: don't seed every time
 	rand.Seed(time.Now().UTC().UnixNano())
@@ -104,7 +111,7 @@ func GenerateId() string {
 	return id
 }
 
-// ComputeId reads from `content` until EOF, then returns a SHA of what it read, as a string.
+//# ComputeId 从`content`读取到EOF，然后返回使用一个SHA加密成的字符串。 
 func ComputeId(content io.Reader) (string, error) {
 	h := sha256.New()
 	if _, err := io.Copy(h, content); err != nil {
@@ -113,9 +120,8 @@ func ComputeId(content io.Reader) (string, error) {
 	return fmt.Sprintf("%x", h.Sum(nil)[:8]), nil
 }
 
-// Image includes convenience proxy functions to its graph
-// These functions will return an error if the image is not registered
-// (ie. if image.graph == nil)
+//# History 镜像`Image`很方便地包括了图的代理函数
+//# 如果镜像`Image`未注册这些函数将返回一个错误（如： if image.graph == nil）
 func (img *Image) History() ([]*Image, error) {
 	var parents []*Image
 	if err := img.WalkHistory(
@@ -129,7 +135,7 @@ func (img *Image) History() ([]*Image, error) {
 	return parents, nil
 }
 
-// layers returns all the filesystem layers needed to mount an image
+//# layers `layers`返回一个镜像`image`挂载所需的所有文件层`layers`.
 // FIXME: @shykes refactor this function with the new error handling
 //        (I'll do it if I have time tonight, I focus on the rest)
 func (img *Image) layers() ([]string, error) {
@@ -155,6 +161,7 @@ func (img *Image) layers() ([]string, error) {
 	return list, nil
 }
 
+//# WalkHistory 遍历图像的结构，检查父镜像是否存在
 func (img *Image) WalkHistory(handler func(*Image) error) (err error) {
 	currentImg := img
 	for currentImg != nil {
@@ -171,6 +178,7 @@ func (img *Image) WalkHistory(handler func(*Image) error) (err error) {
 	return nil
 }
 
+//# GetParent 通过`img.Parent`获取父镜像
 func (img *Image) GetParent() (*Image, error) {
 	if img.Parent == "" {
 		return nil, nil
@@ -188,8 +196,7 @@ func (img *Image) root() (string, error) {
 	return img.graph.imageRoot(img.Id), nil
 }
 
-// Return the path of an image's layer
-
+//# layer 返回镜像`Image`的层`layer`的路径
 func (img *Image) layer() (string, error) {
 	root, err := img.root()
 	if err != nil {
