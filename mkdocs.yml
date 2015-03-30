@@ -16,4 +16,5 @@ pages:
 - [Part1/7_container.go.md,   第一部分, 7. 介绍container.go]
 - [Part1/8_mount.go.md,       第一部分, 8. 介绍mount.go]
 - [Part1/9_auth.go.md,        第一部分, 9. 介绍auth.go]
+- [Part1/10_sysinit.go.md,    第一部分,10. 介绍sysinit.go]
 - [named.md, 对照表]
