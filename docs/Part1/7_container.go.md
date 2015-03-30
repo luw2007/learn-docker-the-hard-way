@@ -7,16 +7,20 @@ type Container struct {
 	root string
 
 	Id string
-
+    //# 创建时间
 	Created time.Time
 
 	Path string
+	//# 启动参数
 	Args []string
-
+    //# toDisk 写入配置文件
 	Config *Config
+	//# 状态
 	State  State
+	//# 镜像id
 	Image  string
 
+    //# 网络接口
 	network         *NetworkInterface
 	NetworkSettings *NetworkSettings
 
@@ -45,12 +49,13 @@ func (container *Container) When() time.Time {
 	return container.Created
 }
 
+//# FromDisk 读取容器`json`配置
 func (container *Container) FromDisk() error {
 	data, err := ioutil.ReadFile(container.jsonPath())
 	if err != nil {
 		return err
 	}
-	// Load container settings
+	//# 加载容器配置
 	if err := json.Unmarshal(data, container); err != nil {
 		return err
 	}
@@ -65,6 +70,7 @@ func (container *Container) ToDisk() (err error) {
 	return ioutil.WriteFile(container.jsonPath(), data, 0666)
 }
 
+//# generateLXCConfig 调用`lxc_template:LxcTemplateCompiled`得到LXC的配置
 func (container *Container) generateLXCConfig() error {
 	fo, err := os.Create(container.lxcConfigPath())
 	if err != nil {
@@ -77,6 +83,8 @@ func (container *Container) generateLXCConfig() error {
 	return nil
 }
 
+//# startPty 调用`github.com/kr/pty`启动一个终端
+//# pty 介绍请查看 http://en.wikipedia.org/wiki/Pseudoterminal.
 func (container *Container) startPty() error {
 	stdout_master, stdout_slave, err := pty.Open()
 	if err != nil {
@@ -91,6 +99,7 @@ func (container *Container) startPty() error {
 	container.cmd.Stderr = stderr_slave
 
 	// Copy the PTYs to our broadcasters
+	//# TODO
 	go func() {
 		defer container.stdout.Close()
 		io.Copy(container.stdout, stdout_master)
@@ -101,7 +110,7 @@ func (container *Container) startPty() error {
 		io.Copy(container.stderr, stderr_master)
 	}()
 
-	// stdin
+	//# 输入
 	var stdin_slave io.ReadCloser
 	if container.Config.OpenStdin {
 		stdin_master, stdin_slave, err := pty.Open()
@@ -128,6 +137,7 @@ func (container *Container) startPty() error {
 	return nil
 }
 
+//# start 启动， 设置stdin, stdout, stderr句柄，并执行`cmd.Start`
 func (container *Container) start() error {
 	container.cmd.Stdout = container.stdout
 	container.cmd.Stderr = container.stderr
@@ -144,6 +154,15 @@ func (container *Container) start() error {
 	return container.cmd.Start()
 }
 
+//# Start 启动 
+//# 1. 确保镜像挂载成功
+//# 2. 分配网络
+//# 3. 加载LXC的配置
+//# 4. 处理参数， -g 网络，-u 用户，-- 程序
+//# 5. 设置环境
+//# 6. 启动
+//# 7. 在状态`State`中写入pid，把配置保存到`json`文件中，
+//# 8. 启动监控`monitor`
 func (container *Container) Start() error {
 	if err := container.EnsureMounted(); err != nil {
 		return err
@@ -161,21 +180,21 @@ func (container *Container) Start() error {
 		"/sbin/init",
 	}
 
-	// Networking
+	// 网络
 	params = append(params, "-g", container.network.Gateway.String())
 
-	// User
+	// 用户
 	if container.Config.User != "" {
 		params = append(params, "-u", container.Config.User)
 	}
 
-	// Program
+	// 程序
 	params = append(params, "--", container.Path)
 	params = append(params, container.Args...)
 
 	container.cmd = exec.Command("/usr/bin/lxc-start", params...)
 
-	// Setup environment
+	// 设置环境
 	container.cmd.Env = append(
 		[]string{
 			"HOME=/",
@@ -223,9 +242,8 @@ func (container *Container) Output() (output []byte, err error) {
 	return output, err
 }
 
-// StdinPipe() returns a pipe connected to the standard input of the container's
-// active process.
-//
+
+//# StdinPipe 返回连接到容器活动进程的标准输入管道。
 func (container *Container) StdinPipe() (io.WriteCloser, error) {
 	return container.stdinPipe, nil
 }
@@ -242,6 +260,7 @@ func (container *Container) StderrPipe() (io.ReadCloser, error) {
 	return newBufReader(reader), nil
 }
 
+//# allocateNetwork 按照容器的端口配置来分配网络
 func (container *Container) allocateNetwork() error {
 	iface, err := container.runtime.networkManager.Allocate()
 	if err != nil {
@@ -263,6 +282,7 @@ func (container *Container) allocateNetwork() error {
 	return nil
 }
 
+//# releaseNetwork 释放网络，见`network:NetworkInterface:Release`
 func (container *Container) releaseNetwork() error {
 	err := container.network.Release()
 	container.network = nil
@@ -270,12 +290,19 @@ func (container *Container) releaseNetwork() error {
 	return err
 }
 
+//# monitor 监控
+//# 1. 等待程序退出
+//# 2. 释放网络
+//# 3. 关闭文件句柄，并卸载容器
+//# 4. 重新打开输入
+//# 5. 设置停止状态
+//# 6. 写入容器配置
 func (container *Container) monitor() {
-	// Wait for the program to exit
+	// 等待程序退出
 	container.cmd.Wait()
 	exitCode := container.cmd.ProcessState.Sys().(syscall.WaitStatus).ExitStatus()
 
-	// Cleanup
+	// 释放网络
 	if err := container.releaseNetwork(); err != nil {
 		log.Printf("%v: Failed to release network: %v", container.Id, err)
 	}
@@ -285,12 +312,12 @@ func (container *Container) monitor() {
 		log.Printf("%v: Failed to umount filesystem: %v", container.Id, err)
 	}
 
-	// Re-create a brand new stdin pipe once the container exited
+	// 一旦容器退出， 重新创建了一个全新的标准输入管道
 	if container.Config.OpenStdin {
 		container.stdin, container.stdinPipe = io.Pipe()
 	}
 
-	// Report status back
+	// 报告状态
 	container.State.setStopped(exitCode)
 	container.ToDisk()
 }
@@ -299,7 +326,7 @@ func (container *Container) kill() error {
 	if err := container.cmd.Process.Kill(); err != nil {
 		return err
 	}
-	// Wait for the container to be actually stopped
+	//# 等待容器确实停止
 	container.Wait()
 	return nil
 }
@@ -311,12 +338,13 @@ func (container *Container) Kill() error {
 	return container.kill()
 }
 
+//# Stop 发一个`SIGTERM`信号， 10秒后条用`Kill`方法结束容器
 func (container *Container) Stop() error {
 	if !container.State.Running {
 		return nil
 	}
 
-	// 1. Send a SIGTERM
+	//# 1. 发一个`SIGTERM`信号
 	if output, err := exec.Command("/usr/bin/lxc-kill", "-n", container.Id, "15").CombinedOutput(); err != nil {
 		log.Printf(string(output))
 		log.Printf("Failed to send SIGTERM to the process, force killing")
@@ -325,7 +353,7 @@ func (container *Container) Stop() error {
 		}
 	}
 
-	// 2. Wait for the process to exit on its own
+	//# 2.  等待容器进程自己结束
 	if err := container.WaitTimeout(10 * time.Second); err != nil {
 		log.Printf("Container %v failed to exit within 10 seconds of SIGTERM - using the force", container.Id)
 		if err := container.Kill(); err != nil {
@@ -345,7 +373,7 @@ func (container *Container) Restart() error {
 	return nil
 }
 
-// Wait blocks until the container stops running, then returns its exit code.
+// 阻塞到容器停止运行，然后返回它的退出代码。
 func (container *Container) Wait() int {
 
 	for container.State.Running {
@@ -354,10 +382,12 @@ func (container *Container) Wait() int {
 	return container.State.ExitCode
 }
 
+//# ExportRw 压缩`rw`路径中的文件
 func (container *Container) ExportRw() (Archive, error) {
 	return Tar(container.rwPath(), Uncompressed)
 }
 
+//# Export 压缩`rootfs`路径中的文件
 func (container *Container) Export() (Archive, error) {
 	if err := container.EnsureMounted(); err != nil {
 		return nil, err
@@ -365,6 +395,7 @@ func (container *Container) Export() (Archive, error) {
 	return Tar(container.RootfsPath(), Uncompressed)
 }
 
+//# WaitTimeout 使用消息队列， 等待完成
 func (container *Container) WaitTimeout(timeout time.Duration) error {
 	done := make(chan bool)
 	go func() {
@@ -381,6 +412,7 @@ func (container *Container) WaitTimeout(timeout time.Duration) error {
 	return nil
 }
 
+//# EnsureMounted 确认已经挂载
 func (container *Container) EnsureMounted() error {
 	if mounted, err := container.Mounted(); err != nil {
 		return err
@@ -390,6 +422,7 @@ func (container *Container) EnsureMounted() error {
 	return container.Mount()
 }
 
+//# Mount 挂载镜像`image`到可读写目录中
 func (container *Container) Mount() error {
 	image, err := container.GetImage()
 	if err != nil {
@@ -398,6 +431,7 @@ func (container *Container) Mount() error {
 	return image.Mount(container.RootfsPath(), container.rwPath())
 }
 
+//# Changes 出现修改，则返回镜像`image`的所有层`layers`的改变。 详见`image.Changes`
 func (container *Container) Changes() ([]Change, error) {
 	image, err := container.GetImage()
 	if err != nil {
@@ -406,6 +440,7 @@ func (container *Container) Changes() ([]Change, error) {
 	return image.Changes(container.rwPath())
 }
 
+//# GetImage 返回容器对应的镜像`image`
 func (container *Container) GetImage() (*Image, error) {
 	if container.runtime == nil {
 		return nil, fmt.Errorf("Can't get image of unregistered container")
@@ -413,10 +448,12 @@ func (container *Container) GetImage() (*Image, error) {
 	return container.runtime.graph.Get(container.Image)
 }
 
+//# Mounted 已经挂载， 检查`rootfs`目录
 func (container *Container) Mounted() (bool, error) {
 	return Mounted(container.RootfsPath())
 }
 
+//# Unmount TODO
 func (container *Container) Unmount() error {
 	return Unmount(container.RootfsPath())
 }
@@ -437,15 +474,18 @@ func (container *Container) lxcConfigPath() string {
 	return path.Join(container.root, "config.lxc")
 }
 
-// This method must be exported to be used from the lxc template
+//# This method must be exported to be used from the lxc template
+//# TODO 这个方法只能用在lxc 模板中被导出
 func (container *Container) RootfsPath() string {
 	return path.Join(container.root, "rootfs")
 }
 
+//# rwPath 读写单独放在一个`rw`目录
 func (container *Container) rwPath() string {
 	return path.Join(container.root, "rw")
 }
 
+//# validateId 验证id
 func validateId(id string) error {
 	if id == "" {
 		return fmt.Errorf("Invalid empty id")
