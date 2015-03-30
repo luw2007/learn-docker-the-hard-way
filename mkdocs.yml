@@ -18,4 +18,5 @@ pages:
 - [Part1/9_auth.go.md,        第一部分, 9. 介绍auth.go]
 - [Part1/10_sysinit.go.md,    第一部分,10. 介绍sysinit.go]
 - [Part1/11_state.go.md,      第一部分,11. 介绍state.go]
+- [Part1/12_commands.go.md,   第一部分,12. 介绍commands.go]
 - [named.md, 对照表]
