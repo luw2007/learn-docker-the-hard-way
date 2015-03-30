@@ -15,4 +15,6 @@
 |layer              | 层                |
 |PortMapper         | 端口映射器          |
 |History            | 历史               |
+|Auth               | 验证               |
+|registry           |                   |
                           

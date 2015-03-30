@@ -15,4 +15,5 @@ pages:
 - [Part1/6_image.go.md,       第一部分, 6. 介绍image.go]
 - [Part1/7_container.go.md,   第一部分, 7. 介绍container.go]
 - [Part1/8_mount.go.md,       第一部分, 8. 介绍mount.go]
+- [Part1/9_auth.go.md,        第一部分, 9. 介绍auth.go]
 - [named.md, 对照表]
