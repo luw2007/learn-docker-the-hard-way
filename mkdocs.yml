@@ -1,5 +1,6 @@
 site_name: learn docker the hard way
 site_author: luw2007@gmail.com
+repo_url: https://github.com/luw2007/learn-docker-the-hard-way
 
 theme: readthedocs
 dev_addr: 0.0.0.0:8000
