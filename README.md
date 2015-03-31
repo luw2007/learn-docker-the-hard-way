@@ -9,7 +9,8 @@ learn docker the hard way
 	# 统计测试以外的golang 代码行数和单词数
 	find . -name "*.go" -exec wc {} \; |grep -v "_test" |sort -u |awk -F" " '{a+=$1;b+=$2}END{print a, b}'
 得到`v0.1.0`版本中golang代码**4499 15630**，
-`v1.0.0`中则是**101549 376671**
+`v1.0.0`中增长到**78070 296052**，
+`v1.5.0`中则是**101549 376671**
 
 ##阅读
 [在线阅读][readthedocs-link]  
