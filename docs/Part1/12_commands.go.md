@@ -1,9 +1,11 @@
 Server的构造
 ==================
+** 又一个重要的模块 **
+实现了命令行工具中的全部功能
+``` golang
 type Server struct {
 	runtime *Runtime
 }
-
 ```
 
 Server的方法
@@ -49,7 +51,7 @@ func (srv *Server) Help() string {
 	return help
 }
 
-// 'docker login': login / register a user to registry service.
+// 'docker login': 注册或登录到`registry`服务.
 func (srv *Server) CmdLogin(stdin io.ReadCloser, stdout io.Writer, args ...string) error {
 	cmd := rcli.Subcmd(stdout, "login", "", "Register or Login to the docker registry server")
 	if err := cmd.Parse(args); err != nil {
@@ -82,6 +84,7 @@ func (srv *Server) CmdLogin(stdin io.ReadCloser, stdout io.Writer, args ...strin
 		email = srv.runtime.authConfig.Email
 	}
 	newAuthConfig := auth.NewAuthConfig(username, password, email, srv.runtime.root)
+	//# 调用`auth:Login`方法
 	status, err := auth.Login(newAuthConfig)
 	if err != nil {
 		fmt.Fprintf(stdout, "Error : %s\n", err)
@@ -92,7 +95,7 @@ func (srv *Server) CmdLogin(stdin io.ReadCloser, stdout io.Writer, args ...strin
 	return nil
 }
 
-// 'docker wait': block until a container stops
+// 'docker wait': 阻塞等待容器停止, 调用`container.Wait()`
 func (srv *Server) CmdWait(stdin io.ReadCloser, stdout io.Writer, args ...string) error {
 	cmd := rcli.Subcmd(stdout, "wait", "[OPTIONS] NAME", "Block until a container stops, then print its exit code.")
 	if err := cmd.Parse(args); err != nil {
@@ -112,13 +115,13 @@ func (srv *Server) CmdWait(stdin io.ReadCloser, stdout io.Writer, args ...string
 	return nil
 }
 
-// 'docker version': show version information
+// 'docker version': 显示版本信息
 func (srv *Server) CmdVersion(stdin io.ReadCloser, stdout io.Writer, args ...string) error {
 	fmt.Fprintf(stdout, "Version:%s\n", VERSION)
 	return nil
 }
 
-// 'docker info': display system-wide information.
+// 'docker info': 显示系统范围内的信息
 func (srv *Server) CmdInfo(stdin io.ReadCloser, stdout io.Writer, args ...string) error {
 	images, _ := srv.runtime.graph.All()
 	var imgcount int
@@ -208,6 +211,7 @@ func (srv *Server) CmdStart(stdin io.ReadCloser, stdout io.Writer, args ...strin
 	return nil
 }
 
+//# CmdInspect 返回一个容器的底层信息
 func (srv *Server) CmdInspect(stdin io.ReadCloser, stdout io.Writer, args ...string) error {
 	cmd := rcli.Subcmd(stdout, "inspect", "[OPTIONS] CONTAINER", "Return low-level information on a container")
 	if err := cmd.Parse(args); err != nil {
@@ -224,7 +228,7 @@ func (srv *Server) CmdInspect(stdin io.ReadCloser, stdout io.Writer, args ...str
 	} else if image, err := srv.runtime.repositories.LookupImage(name); err == nil && image != nil {
 		obj = image
 	} else {
-		// No output means the object does not exist
+		// 对象不存在则不输出
 		// (easier to script since stdout and stderr are not differentiated atm)
 		return nil
 	}
@@ -266,7 +270,7 @@ func (srv *Server) CmdPort(stdin io.ReadCloser, stdout io.Writer, args ...string
 	return nil
 }
 
-// 'docker rmi NAME' removes all images with the name NAME
+// 'docker rmi NAME' 删除名为NAME的所有镜像
 func (srv *Server) CmdRmi(stdin io.ReadCloser, stdout io.Writer, args ...string) (err error) {
 	cmd := rcli.Subcmd(stdout, "rmimage", "[OPTIONS] IMAGE", "Remove an image")
 	if cmd.Parse(args) != nil || cmd.NArg() < 1 {
@@ -281,6 +285,7 @@ func (srv *Server) CmdRmi(stdin io.ReadCloser, stdout io.Writer, args ...string)
 	return nil
 }
 
+//# 'docker rmi NAME' 递归列出镜像NAME的命令记录
 func (srv *Server) CmdHistory(stdin io.ReadCloser, stdout io.Writer, args ...string) error {
 	cmd := rcli.Subcmd(stdout, "history", "[OPTIONS] IMAGE", "Show the history of an image")
 	if cmd.Parse(args) != nil || cmd.NArg() != 1 {
@@ -304,6 +309,7 @@ func (srv *Server) CmdHistory(stdin io.ReadCloser, stdout io.Writer, args ...str
 	})
 }
 
+//# 'docker rm NAME' 删除容器NAME, 停止容器，推出(umount, osx 如此翻译过)容器挂载，删除容器信息。
 func (srv *Server) CmdRm(stdin io.ReadCloser, stdout io.Writer, args ...string) error {
 	cmd := rcli.Subcmd(stdout, "rm", "[OPTIONS] CONTAINER", "Remove a container")
 	if err := cmd.Parse(args); err != nil {
@@ -321,7 +327,7 @@ func (srv *Server) CmdRm(stdin io.ReadCloser, stdout io.Writer, args ...string) 
 	return nil
 }
 
-// 'docker kill NAME' kills a running container
+// 'docker kill NAME' 结束容器NAME
 func (srv *Server) CmdKill(stdin io.ReadCloser, stdout io.Writer, args ...string) error {
 	cmd := rcli.Subcmd(stdout, "kill", "[OPTIONS] CONTAINER [CONTAINER...]", "Kill a running container")
 	if err := cmd.Parse(args); err != nil {
@@ -339,6 +345,7 @@ func (srv *Server) CmdKill(stdin io.ReadCloser, stdout io.Writer, args ...string
 	return nil
 }
 
+//# 'docker import URL|- [REPOSITORY[:TAG]]' 从URL或者'-'中导入一个新的镜像
 func (srv *Server) CmdImport(stdin io.ReadCloser, stdout io.Writer, args ...string) error {
 	cmd := rcli.Subcmd(stdout, "import", "[OPTIONS] URL|- [REPOSITORY [TAG]]", "Create a new filesystem image from the contents of a tarball")
 	var archive io.Reader
@@ -386,6 +393,7 @@ func (srv *Server) CmdImport(stdin io.ReadCloser, stdout io.Writer, args ...stri
 	return nil
 }
 
+//# 'docker push NAME[:TAG]' 上传一个NAME[:TAG]的镜像到`registry`服务器
 func (srv *Server) CmdPush(stdin io.ReadCloser, stdout io.Writer, args ...string) error {
 	cmd := rcli.Subcmd(stdout, "push", "LOCAL", "Push an image or a repository to the registry")
 	if err := cmd.Parse(args); err != nil {
@@ -444,6 +452,7 @@ func (srv *Server) CmdPush(stdin io.ReadCloser, stdout io.Writer, args ...string
 	return nil
 }
 
+//# 'docker pull NAME[:TAG]' 从`registry`服务器下载镜像NAME[:TAG]
 func (srv *Server) CmdPull(stdin io.ReadCloser, stdout io.Writer, args ...string) error {
 	cmd := rcli.Subcmd(stdout, "pull", "IMAGE", "Pull an image or a repository from the registry")
 	if err := cmd.Parse(args); err != nil {
@@ -476,6 +485,7 @@ func (srv *Server) CmdPull(stdin io.ReadCloser, stdout io.Writer, args ...string
 	return nil
 }
 
+//# 'docker images' 列出镜像
 func (srv *Server) CmdImages(stdin io.ReadCloser, stdout io.Writer, args ...string) error {
 	cmd := rcli.Subcmd(stdout, "images", "[OPTIONS] [NAME]", "List images")
 	//limit := cmd.Int("l", 0, "Only show the N most recent versions of each image")
@@ -566,6 +576,7 @@ func (srv *Server) CmdImages(stdin io.ReadCloser, stdout io.Writer, args ...stri
 	return nil
 }
 
+//# ’docker ps' 列出容器
 func (srv *Server) CmdPs(stdin io.ReadCloser, stdout io.Writer, args ...string) error {
 	cmd := rcli.Subcmd(stdout,
 		"ps", "[OPTIONS]", "List containers")
@@ -613,6 +624,7 @@ func (srv *Server) CmdPs(stdin io.ReadCloser, stdout io.Writer, args ...string) 
 	return nil
 }
 
+//# 'docker commit' 用容器的变化创建新的镜像
 func (srv *Server) CmdCommit(stdin io.ReadCloser, stdout io.Writer, args ...string) error {
 	cmd := rcli.Subcmd(stdout,
 		"commit", "[OPTIONS] CONTAINER [REPOSITORY [TAG]]",
@@ -655,6 +667,7 @@ func (srv *Server) CmdExport(stdin io.ReadCloser, stdout io.Writer, args ...stri
 	return errors.New("No such container: " + name)
 }
 
+//# 'docker diff CONTAINER' 对比容器文件的修改
 func (srv *Server) CmdDiff(stdin io.ReadCloser, stdout io.Writer, args ...string) error {
 	cmd := rcli.Subcmd(stdout,
 		"diff", "CONTAINER [OPTIONS]",
@@ -679,6 +692,7 @@ func (srv *Server) CmdDiff(stdin io.ReadCloser, stdout io.Writer, args ...string
 	return nil
 }
 
+//# 'docker logs CONTAINER' 取得一个容器的日志
 func (srv *Server) CmdLogs(stdin io.ReadCloser, stdout io.Writer, args ...string) error {
 	cmd := rcli.Subcmd(stdout, "logs", "[OPTIONS] CONTAINER", "Fetch the logs of a container")
 	if err := cmd.Parse(args); err != nil {
@@ -711,6 +725,7 @@ func (srv *Server) CmdLogs(stdin io.ReadCloser, stdout io.Writer, args ...string
 	return errors.New("No such container: " + cmd.Arg(0))
 }
 
+//# 'docker attach Container' 连接上一个运行中的容器
 func (srv *Server) CmdAttach(stdin io.ReadCloser, stdout io.Writer, args ...string) error {
 	cmd := rcli.Subcmd(stdout, "attach", "[OPTIONS]", "Attach to a running container")
 	fl_i := cmd.Bool("i", false, "Attach to stdin")
@@ -798,6 +813,7 @@ func (srv *Server) CmdTag(stdin io.ReadCloser, stdout io.Writer, args ...string)
 	return srv.runtime.repositories.Set(cmd.Arg(1), cmd.Arg(2), cmd.Arg(0), *force)
 }
 
+// 'docker run NAME' 实例化一个镜像
 func (srv *Server) CmdRun(stdin io.ReadCloser, stdout io.Writer, args ...string) error {
 	config, err := ParseRun(args)
 	if err != nil {
@@ -809,7 +825,7 @@ func (srv *Server) CmdRun(stdin io.ReadCloser, stdout io.Writer, args ...string)
 	if len(config.Cmd) == 0 {
 		return fmt.Errorf("Command not specified")
 	}
-	// Create new container
+	//# 创建一个新的容器
 	container, err := srv.runtime.Create(config)
 	if err != nil {
 		return errors.New("Error creating container: " + err.Error())
@@ -827,7 +843,7 @@ func (srv *Server) CmdRun(stdin io.ReadCloser, stdout io.Writer, args ...string)
 			})
 		}
 	}
-	// Run the container
+	// 运行容器
 	if !config.Detach {
 		cmd_stderr, err := container.StderrPipe()
 		if err != nil {
